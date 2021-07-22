@@ -15,10 +15,11 @@ type Doer interface {
 
 // Access is the access and credentials for the API
 type Access struct {
-	host     string
-	password string
-	token    string
-	client   Doer
+	host        string
+	password    string
+	token       string
+	bearertoken string
+	client      Doer
 }
 
 // NewAccess returns a new *Access to be used to interface with the
@@ -49,8 +50,16 @@ func (a *Access) SetToken(token string) {
 	a.token = token
 }
 
+// SetBearerToken sets the Authentiation: Bearer header
+// Long Lived Access Tokens can be generated from the HASS UI
+func (a *Access) SetBearerToken(token string) {
+	a.bearertoken = "Bearer " + token
+}
+
 func (a *Access) httpGet(path string, v interface{}) error {
 	req, err := http.NewRequest("GET", a.host+path, nil)
+	println(a.host + path)
+
 	if err != nil {
 		return err
 	}
@@ -61,6 +70,10 @@ func (a *Access) httpGet(path string, v interface{}) error {
 
 	if a.token != "" {
 		req.Header.Set("X-HASSIO-KEY", a.token)
+	}
+
+	if a.bearertoken != "" {
+		req.Header.Set("Authorization", a.bearertoken)
 	}
 
 	success := false
@@ -121,6 +134,10 @@ func (a *Access) httpPost(path string, v interface{}) error {
 
 	if a.token != "" {
 		req.Header.Set("X-HASSIO-KEY", a.token)
+	}
+
+	if a.bearertoken != "" {
+		req.Header.Set("Authorization", a.bearertoken)
 	}
 
 	var err error
